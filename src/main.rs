@@ -1,9 +1,32 @@
-use evdev::{Device, Key};
-use std::{fs, io::stdin};
+use evdev::*;
+use std::io::stdin;
+use std::time::Duration;
+use std::thread;
 
 fn main() {
 	
 	let selected = choose_kb();
+	if selected.is_none() {
+		return;
+	}
+	let mut active_device = selected.unwrap();
+
+	// active_device.grab().unwrap();
+
+	let v = uinput::VirtualDeviceBuilder::new()
+		.unwrap()
+		.name("asetniop")
+	;
+	
+	let mut a = v.build().unwrap();
+	let press = [
+		InputEvent::new_now(EventType::KEY, Key::KEY_A.0, 0),
+		InputEvent::new_now(EventType::KEY, Key::KEY_A.0, 1)
+		];
+	a.emit(&press[0..1]).unwrap();
+	thread::sleep(Duration::from_secs(1));
+	a.emit(&press[1..2]).unwrap();
+	thread::sleep(Duration::from_secs(10));
 	
 }
 
@@ -18,7 +41,7 @@ fn choose_kb() -> Option<Device> {
 		let mut answer = String::new();
 		stdin.read_line(&mut answer).unwrap();
 		answer.remove(answer.len() - 1);
-		if answer.to_lowercase().starts_with("q") {
+		if answer.to_lowercase().starts_with('q') {
 			return None;
 		}
 		if let Ok(index) = answer.parse::<usize>() {
@@ -35,7 +58,7 @@ fn choose_kb() -> Option<Device> {
 		println!("\n");
 	}
 	
-	fn print_devices(devices: &Vec<Device>) {
+	fn print_devices(devices: &[Device]) {
 		for (i, kb) in devices.iter().enumerate() {
 			if let Some(name) = kb.name() {
 				println!("{}: {}", i, name);
@@ -49,15 +72,11 @@ fn choose_kb() -> Option<Device> {
 fn find_keyboards() -> Vec<Device> {
 	let mut keyboards = Vec::new();
 	println!("Scanning /dev/input/ for keyboards");
-	
-	let devices = fs::read_dir("/dev/input").unwrap();
-	for device_path in devices.flatten() {
-		if let Ok(device) = Device::open(device_path.path()) {
-			let keys = device.supported_keys();
-			if let Some(keys) = keys {
-				if keys.contains(Key::KEY_SPACE) {
-					keyboards.push(device)
-				}
+	for device in evdev::enumerate() {
+		let keys = device.supported_keys();
+		if let Some(keys) = keys {
+			if keys.contains(Key::KEY_SPACE) {
+				keyboards.push(device)
 			}
 		}
 	}
