@@ -1,4 +1,5 @@
 use evdev::*;
+use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
 use std::io::stdin;
 use std::time::Duration;
 use std::thread;
@@ -9,25 +10,36 @@ fn main() {
 	if selected.is_none() {
 		return;
 	}
-	let mut active_device = selected.unwrap();
+	let mut input_kb = selected.unwrap();
+	
+	let keys = input_kb.supported_keys().unwrap();
+	
+	let mut virtual_kb = create_device(keys);
+	thread::sleep(Duration::from_millis(200));
 
-	// active_device.grab().unwrap();
+	press_key(&mut virtual_kb, Key::KEY_H);
+	press_key(&mut virtual_kb, Key::KEY_E);
+	press_key(&mut virtual_kb, Key::KEY_L);
+	press_key(&mut virtual_kb, Key::KEY_L);
+	press_key(&mut virtual_kb, Key::KEY_O);
+}
 
-	let v = uinput::VirtualDeviceBuilder::new()
-		.unwrap()
+fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
+	 VirtualDeviceBuilder::new()
+	 	.unwrap()
 		.name("asetniop")
-	;
-	
-	let mut a = v.build().unwrap();
-	let press = [
-		InputEvent::new_now(EventType::KEY, Key::KEY_A.0, 0),
-		InputEvent::new_now(EventType::KEY, Key::KEY_A.0, 1)
-		];
-	a.emit(&press[0..1]).unwrap();
-	thread::sleep(Duration::from_secs(1));
-	a.emit(&press[1..2]).unwrap();
-	thread::sleep(Duration::from_secs(10));
-	
+		.with_keys(&keys)
+		.unwrap()
+		.build()
+		.unwrap()
+}
+
+fn press_key(device: &mut VirtualDevice, key: Key) {
+	let events = [
+		InputEvent::new(EventType::KEY, key.0, 1),
+		InputEvent::new(EventType::KEY, key.0, 0),
+	];
+	device.emit(&events).unwrap();
 }
 
 fn choose_kb() -> Option<Device> {
