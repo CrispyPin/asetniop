@@ -69,6 +69,7 @@ impl ChordedKeyboard {
 			if let Some(key_bind) = self.config.chords.get(&self.chord) {
 				self.output_dev.emit(key_bind).unwrap();
 			}
+			self.chord = 0;
 		}
 	}
 
@@ -105,6 +106,19 @@ impl ChordConfig {
 				if let Value::String(key_name) = key {
 					let chord_part = 1 << i;
 					keys.insert(name_to_key(key_name), chord_part);
+				}
+			}
+		}
+		println!("{:?}", keys);
+
+		// load output/emulated keys
+		let mapped_keys = &file_config["output"]["keys"];
+		println!("{:?}", mapped_keys);
+		if let Value::Array(mapped_keys) = mapped_keys {
+			for (i, key) in mapped_keys.iter().enumerate() {
+				if let Value::String(key_name) = key {
+					let chord_part = 1 << i;
+					chords.insert(chord_part, KeyBind::single(name_to_key(key_name)));
 				}
 			}
 		}
