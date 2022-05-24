@@ -86,26 +86,25 @@ impl ChordConfig {
 		let mut keys = HashMap::new();
 		let mut chords = HashMap::new();
 
-		// let cfg = toml::
-		let mut cfg = String::new();
+		let mut file_config = String::new();
 		if let Ok(mut file) = File::open("default.toml") {
-			file.read_to_string(&mut cfg).unwrap();
+			file.read_to_string(&mut file_config).unwrap();
 		}
 		else {
 			println!("No config found");
 			return Self::new();
 		}
-		let file_config = cfg.parse::<Value>().expect("Could not parse config file; not valid TOML");
+		let file_config = file_config.parse::<Value>().expect("Could not parse config file; not valid TOML");
 		println!("\n{:?}\n", file_config);
-		{
-			let loaded_keys = &file_config["input"]["keys"];
-			println!("{:?}", loaded_keys);
-			if let Value::Array(loaded_keys) = loaded_keys {
-				for (i, key) in loaded_keys.iter().enumerate() {
-					if let Value::String(key_name) = key {
-						let chord_part = 1 << i;
-						keys.insert(name_to_key(key_name), chord_part);
-					}
+
+		// load input keys
+		let loaded_keys = &file_config["input"]["keys"];
+		println!("{:?}", loaded_keys);
+		if let Value::Array(loaded_keys) = loaded_keys {
+			for (i, key) in loaded_keys.iter().enumerate() {
+				if let Value::String(key_name) = key {
+					let chord_part = 1 << i;
+					keys.insert(name_to_key(key_name), chord_part);
 				}
 			}
 		}
@@ -127,5 +126,5 @@ fn name_to_key(name: &str) -> Key {
 			return key;
 		}
 	}
-	Key::KEY_SPACE
+	panic!("Error: unknown key: '{}'", name);
 }

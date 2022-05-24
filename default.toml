@@ -1,7 +1,6 @@
 [input]
 # physical keys to use
-# A,S,E,T,N,I,O,P,SHIFT
-keys = ["Q", "W", "E", "R", "U", "I", "O", "P"]
+keys = ["Q", "W", "E", "R", "U", "I", "O", "P", "ASDAW"]
 shift = "V"
 
 [output]
