@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-
+use std::fs::File;
+use std::io::Read;
+use toml::Value;
 use evdev::*;
 use evdev::uinput::*;
 
@@ -16,7 +18,6 @@ pub struct ChordedKeyboard {
 }
 
 pub struct ChordConfig {
-	// keys: Vec<Key>,
 	keys: HashMap<Key, Chord>,
 	chords: HashMap<Chord, KeyBind>,
 }
@@ -82,6 +83,49 @@ impl ChordConfig {
 	}
 
 	fn load() -> Self {
-		Self::new()	
+		let mut keys = HashMap::new();
+		let mut chords = HashMap::new();
+
+		// let cfg = toml::
+		let mut cfg = String::new();
+		if let Ok(mut file) = File::open("default.toml") {
+			file.read_to_string(&mut cfg).unwrap();
+		}
+		else {
+			println!("No config found");
+			return Self::new();
+		}
+		let file_config = cfg.parse::<Value>().expect("Could not parse config file; not valid TOML");
+		println!("\n{:?}\n", file_config);
+		{
+			let loaded_keys = &file_config["input"]["keys"];
+			println!("{:?}", loaded_keys);
+			if let Value::Array(loaded_keys) = loaded_keys {
+				for (i, key) in loaded_keys.iter().enumerate() {
+					if let Value::String(key_name) = key {
+						let chord_part = 1 << i;
+						keys.insert(name_to_key(key_name), chord_part);
+					}
+				}
+			}
+		}
+		println!("{:?}", keys);
+
+		Self {
+			keys,
+			chords,
+		}
 	}
+}
+
+fn name_to_key(name: &str) -> Key {
+	let target_name = format!("KEY_{}", name);
+	for code in Key::KEY_RESERVED.code()..Key::BTN_TRIGGER_HAPPY40.code() {
+		let key = Key::new(code);
+		let name = format!("{:?}", key);
+		if name == target_name {
+			return key;
+		}
+	}
+	Key::KEY_SPACE
 }

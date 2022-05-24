@@ -1,0 +1,40 @@
+[input]
+# physical keys to use
+# A,S,E,T,N,I,O,P,SHIFT
+keys = ["Q", "W", "E", "R", "U", "I", "O", "P"]
+shift = "V"
+
+[output]
+keys = ["A", "S", "E", "T", "N", "I", "O", "P"]
+
+[output.chords]
+AS = "W"
+AE = "X"
+AT = "F"
+AN = "Q"
+AI = "Z"
+AO = "("
+AP = "?"
+SE = "D"
+ST = "C"
+SN = "J"
+SI = "K"
+SO = "."
+SP = ")"
+ET = "R"
+EN = "Y"
+EI = ","
+EO = "-"
+EP = "'"
+TN = "B"
+TI = "V"
+TO = "G"
+TP = "BACKSPACE"
+NI = "H"
+NO = "U"
+NP = "M"
+IO = "L"
+IP = "!"
+OP = ";"
+NIOP = "RETURN"
+
