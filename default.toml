@@ -1,6 +1,5 @@
 [input]
-# physical keys to use
-keys = ["Q", "W", "E", "R", "U", "I", "O", "P", "ASDAW"]
+keys = ["Q", "W", "E", "R", "U", "I", "O", "P"]
 shift = "V"
 
 [output]
@@ -36,4 +35,3 @@ IO = "L"
 IP = "!"
 OP = ";"
 NIOP = "RETURN"
-
