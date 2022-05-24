@@ -48,7 +48,7 @@ impl ChordedKeyboard {
 					}
 					else {
 						self.output_dev.emit(&[event]).unwrap();
-						println!("passing through {} {:?}", event.value(), key);
+						// println!("passing through {} {:?}", event.value(), key);
 					}
 				}
 			}
@@ -96,7 +96,7 @@ impl ChordConfig {
 			return Self::new();
 		}
 		let file_config = file_config.parse::<Value>().expect("Could not parse config file; not valid TOML");
-		println!("\n{:?}\n", file_config);
+		// println!("\n{:?}\n", file_config);
 
 		// load input keys
 		let loaded_keys = &file_config["input"]["keys"];
@@ -105,24 +105,49 @@ impl ChordConfig {
 			for (i, key) in loaded_keys.iter().enumerate() {
 				if let Value::String(key_name) = key {
 					let chord_part = 1 << i;
-					keys.insert(name_to_key(key_name), chord_part);
+					keys.insert(name_to_key(key_name).unwrap(), chord_part);
 				}
 			}
 		}
-		println!("{:?}", keys);
-
+		// println!("{:?}", keys);
+		
+		let mut chord_components: HashMap<Key, Chord> = HashMap::new();
 		// load output/emulated keys
 		let mapped_keys = &file_config["output"]["keys"];
 		println!("{:?}", mapped_keys);
 		if let Value::Array(mapped_keys) = mapped_keys {
 			for (i, key) in mapped_keys.iter().enumerate() {
-				if let Value::String(key_name) = key {
+				if let Value::String(mapped_key_name) = key {
 					let chord_part = 1 << i;
-					chords.insert(chord_part, KeyBind::single(name_to_key(key_name)));
+					let mapped_key = name_to_key(mapped_key_name).unwrap();
+					chords.insert(chord_part, KeyBind::single(mapped_key));
+					chord_components.insert(mapped_key, chord_part);
 				}
 			}
 		}
-		println!("{:?}", keys);
+
+		let loaded_chords = &file_config["output"]["chords"];
+		if let Value::Table(loaded_chords) = loaded_chords {
+			for (chord_str, out_key) in loaded_chords.iter() {
+				if let Value::String(out_key) = out_key {
+					let out_key = name_to_key(out_key);
+					if out_key.is_none() {
+						continue;
+					}
+					let out_key = out_key.unwrap();
+
+					let mut chord = 0;
+					for component in chord_str.chars() {
+						let name = component.to_string();
+						let component_key = name_to_key(&name).unwrap();
+						chord |= chord_components.get(&component_key).unwrap();
+					}
+					chords.insert(chord, KeyBind::single(out_key));
+				}
+				//Todo: key sequences
+			}
+		}
+		println!("{}", loaded_chords);
 
 		Self {
 			keys,
@@ -131,14 +156,14 @@ impl ChordConfig {
 	}
 }
 
-fn name_to_key(name: &str) -> Key {
+fn name_to_key(name: &str) -> Option<Key> {
 	let target_name = format!("KEY_{}", name);
 	for code in Key::KEY_RESERVED.code()..Key::BTN_TRIGGER_HAPPY40.code() {
 		let key = Key::new(code);
 		let name = format!("{:?}", key);
 		if name == target_name {
-			return key;
+			return Some(key);
 		}
 	}
-	panic!("Error: unknown key: '{}'", name);
+	None
 }
