@@ -1,8 +1,12 @@
 use evdev::*;
-use evdev::uinput::{VirtualDevice, VirtualDeviceBuilder};
+use evdev::uinput::*;
 use std::io::stdin;
 use std::time::Duration;
 use std::thread;
+
+mod chordkb;
+use chordkb::*;
+mod keys;
 
 fn main() {
 	
@@ -10,36 +14,25 @@ fn main() {
 	if selected.is_none() {
 		return;
 	}
-	let mut input_kb = selected.unwrap();
+	let input_kb = selected.unwrap();
 	
 	let keys = input_kb.supported_keys().unwrap();
-	
-	let mut virtual_kb = create_device(keys);
+	let virtual_kb = create_device(keys);
 	thread::sleep(Duration::from_millis(200));
 
-	press_key(&mut virtual_kb, Key::KEY_H);
-	press_key(&mut virtual_kb, Key::KEY_E);
-	press_key(&mut virtual_kb, Key::KEY_L);
-	press_key(&mut virtual_kb, Key::KEY_L);
-	press_key(&mut virtual_kb, Key::KEY_O);
+	let mut kb = ChordedKeyboard::new(input_kb, virtual_kb);
+	kb.start();
+	kb.release();
 }
 
 fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
 	 VirtualDeviceBuilder::new()
 	 	.unwrap()
 		.name("asetniop")
-		.with_keys(&keys)
+		.with_keys(keys)
 		.unwrap()
 		.build()
 		.unwrap()
-}
-
-fn press_key(device: &mut VirtualDevice, key: Key) {
-	let events = [
-		InputEvent::new(EventType::KEY, key.0, 1),
-		InputEvent::new(EventType::KEY, key.0, 0),
-	];
-	device.emit(&events).unwrap();
 }
 
 fn choose_kb() -> Option<Device> {
