@@ -7,6 +7,9 @@ use std::thread;
 mod chordkb;
 use chordkb::*;
 mod keys;
+mod config;
+
+const DEBUG_SUPPORTED_KEYS: bool = false;
 
 fn main() {
 	
@@ -17,6 +20,9 @@ fn main() {
 	let input_kb = selected.unwrap();
 	
 	let keys = input_kb.supported_keys().unwrap();
+	if DEBUG_SUPPORTED_KEYS {
+		println!("{:?}", keys);
+	}
 	let virtual_kb = create_device(keys);
 	thread::sleep(Duration::from_millis(200));
 
@@ -37,7 +43,7 @@ fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
 
 fn choose_kb() -> Option<Device> {
 	let mut keyboards = find_keyboards();
-	println!("Found {} keyboard devices", keyboards.len());
+	println!("Found {} keyboard device(s)", keyboards.len());
 	
 	let stdin = stdin();
 	loop {
