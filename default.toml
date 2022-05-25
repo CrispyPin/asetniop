@@ -35,3 +35,6 @@ IO = "L"
 IP = "!"
 OP = "SEMICOLON"
 NIOP = "ENTER"
+ASET = "TAB"
+# exits asetniop
+ASOP = "EXIT"

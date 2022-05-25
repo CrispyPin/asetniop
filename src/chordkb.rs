@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use evdev::*;
 use evdev::uinput::*;
 
@@ -63,6 +65,12 @@ impl ChordedKeyboard {
 
 		if self.state == 0 {
 			if let Some(key_bind) = self.config.chords.get(&self.chord) {
+				if key_bind[0].code() == Key::KEY_EXIT.code() {
+					self.input_dev.ungrab().unwrap();
+					println!("Exiting");
+					exit(0);
+				}
+
 				self.output_dev.emit(key_bind).unwrap();
 				if DEBUG_OUTPUT {
 					println!("Chord pressed: {:?}", key_bind.display());
@@ -70,10 +78,6 @@ impl ChordedKeyboard {
 			}
 			self.chord = 0;
 		}
-	}
-
-	pub fn release(&mut self) {
-		self.input_dev.ungrab().unwrap();
 	}
 }
 

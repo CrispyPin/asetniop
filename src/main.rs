@@ -18,17 +18,15 @@ fn main() {
 		return;
 	}
 	let input_kb = selected.unwrap();
+	thread::sleep(Duration::from_millis(200));
 	
 	let keys = input_kb.supported_keys().unwrap();
 	if DEBUG_SUPPORTED_KEYS {
 		println!("{:?}", keys);
 	}
 	let virtual_kb = create_device(keys);
-	thread::sleep(Duration::from_millis(200));
-
 	let mut kb = ChordedKeyboard::new(input_kb, virtual_kb);
 	kb.start();
-	kb.release();
 }
 
 fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
