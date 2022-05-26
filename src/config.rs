@@ -9,17 +9,23 @@ use crate::keys::*;
 
 pub struct ChordConfig {
 	pub keys: HashMap<Key, Chord>,
+	pub remaps: HashMap<Key, Key>,
 	pub chords: HashMap<Chord, KeyBind>,
 }
 
 impl ChordConfig {
 	fn new() -> Self {
-		Self { keys: HashMap::new(), chords: HashMap::new() }
+		Self {
+			keys: HashMap::new(),
+			remaps: HashMap::new(),
+			chords: HashMap::new(),
+		}
 	}
 
 	pub fn load() -> Self {
 		let mut keys = HashMap::new();
 		let mut chords = HashMap::new();
+		let mut remaps = HashMap::new();
 
 		let mut file_config = String::new();
 		if let Ok(mut file) = File::open("default.toml") {
@@ -30,7 +36,6 @@ impl ChordConfig {
 			return Self::new();
 		}
 		let file_config = file_config.parse::<Value>().expect("Could not parse config file; not valid TOML");
-		// println!("\n{:?}\n", file_config);
 
 		// load input keys
 		let loaded_keys = &file_config["input"]["keys"];
@@ -43,7 +48,24 @@ impl ChordConfig {
 				}
 			}
 		}
-		// println!("{:?}", keys);
+
+		let loaded_remaps = &file_config["input"]["remap"];
+		if let Value::Table(loaded_remaps) = loaded_remaps {
+			for (in_key, out_key) in loaded_remaps.iter() {
+				if let Value::String(out_key) = out_key {
+					let out_key = match name_to_key(out_key) {
+						Some(key) => key,
+						None => {
+							println!("Could not map '{}' to '{}', target invalid", in_key, out_key);
+							continue;
+						},
+					};
+
+					let in_key = name_to_key(in_key).unwrap();
+					remaps.insert(in_key, out_key);
+				}
+			}
+		}
 		
 		let mut chord_components: HashMap<Key, Chord> = HashMap::new();
 		// load output/emulated keys
@@ -64,11 +86,10 @@ impl ChordConfig {
 		if let Value::Table(loaded_chords) = loaded_chords {
 			for (chord_str, out_key) in loaded_chords.iter() {
 				if let Value::String(out_key) = out_key {
-					let out_key = name_to_key(out_key);
-					if out_key.is_none() {
-						continue;
-					}
-					let out_key = out_key.unwrap();
+					let out_key = match name_to_key(out_key) {
+						Some(key) => key,
+						None => continue,
+					};
 
 					let mut chord = 0;
 					for component in chord_str.chars() {
@@ -85,6 +106,7 @@ impl ChordConfig {
 
 		Self {
 			keys,
+			remaps,
 			chords,
 		}
 	}

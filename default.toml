@@ -1,6 +1,8 @@
 [input]
 keys = ["Q", "W", "E", "R", "U", "I", "O", "P"]
-shift = "V"
+
+[input.remap]
+V = "LEFTSHIFT"
 
 [output]
 keys = ["A", "S", "E", "T", "N", "I", "O", "P"]

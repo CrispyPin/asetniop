@@ -42,6 +42,11 @@ impl ChordedKeyboard {
 					if self.config.keys.contains_key(&key) {
 						self.update_chord(key, event.value());
 					}
+					else if self.config.remaps.contains_key(&key) {
+						let mapped_key = self.config.remaps.get(&key).unwrap();
+						let mapped_event = InputEvent::new(EventType::KEY, mapped_key.code(), event.value());
+						self.output_dev.emit(&[mapped_event]).unwrap();
+					}
 					else {
 						self.output_dev.emit(&[event]).unwrap();
 						if DEBUG_PASSTHROUGH {
