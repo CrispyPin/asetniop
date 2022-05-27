@@ -44,7 +44,14 @@ impl ChordConfig {
 			for (i, key) in loaded_keys.iter().enumerate() {
 				if let Value::String(key_name) = key {
 					let chord_part = 1 << i;
-					keys.insert(name_to_key(key_name).unwrap(), chord_part);
+					let key = match name_to_key(key_name) {
+						Some(key) => key,
+						None => {
+							println!("Could not assign input key '{}', it is invalid", key_name);
+							continue;
+						}
+					};
+					keys.insert(key, chord_part);
 				}
 			}
 		}
@@ -56,12 +63,17 @@ impl ChordConfig {
 					let out_key = match name_to_key(out_key) {
 						Some(key) => key,
 						None => {
-							println!("Could not map '{}' to '{}', target invalid", in_key, out_key);
+							println!("Could not bind '{}' to '{}', output key is invalid", in_key, out_key);
 							continue;
 						},
 					};
-
-					let in_key = name_to_key(in_key).unwrap();
+					let in_key = match name_to_key(in_key) {
+						Some(key) => key,
+						None => {
+							println!("Could not bind '{}' to '{:?}', input key is invalid", in_key, out_key);
+							continue;
+						},
+					};
 					remaps.insert(in_key, out_key);
 				}
 			}
@@ -75,20 +87,29 @@ impl ChordConfig {
 			for (i, key) in mapped_keys.iter().enumerate() {
 				if let Value::String(mapped_key_name) = key {
 					let chord_part = 1 << i;
-					let mapped_key = name_to_key(mapped_key_name).unwrap();
+					let mapped_key = match name_to_key(mapped_key_name) {
+						Some(key) => key,
+						None => {
+							println!("Could not assign chord key '{}', it is invalid", mapped_key_name);
+							continue;
+						},
+					};
 					chords.insert(chord_part, KeyBind::single(mapped_key));
 					chord_components.insert(mapped_key, chord_part);
 				}
 			}
 		}
-
+		
 		let loaded_chords = &file_config["output"]["chords"];
 		if let Value::Table(loaded_chords) = loaded_chords {
 			for (chord_str, out_key) in loaded_chords.iter() {
 				if let Value::String(out_key) = out_key {
 					let out_key = match name_to_key(out_key) {
 						Some(key) => key,
-						None => continue,
+						None => {
+							println!("Could not bind chord '{}' to '{}', output key is invalid", chord_str, out_key);
+							continue;
+						},
 					};
 
 					let mut chord = 0;
