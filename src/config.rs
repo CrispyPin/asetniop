@@ -1,4 +1,4 @@
-use evdev::*;
+use evdev::Key;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;

@@ -77,7 +77,11 @@ fn choose_kb() -> Option<Device> {
 
 fn find_keyboards() -> Vec<Device> {
 	let mut keyboards = Vec::new();
-	println!("Scanning /dev/input/ for keyboards");
+	println!("Checking /dev/input/ for keyboards.");
+	if evdev::enumerate().next().is_none() {
+		println!("No devices found, try running as root.");
+		std::process::exit(1);
+	}
 	for (_path, device) in evdev::enumerate() {
 		let keys = device.supported_keys();
 		if let Some(keys) = keys {
