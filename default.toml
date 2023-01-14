@@ -2,7 +2,7 @@
 keys = ["Q", "W", "E", "R", "U", "I", "O", "P"]
 
 [input.remap]
-V = "LEFTSHIFT"
+B = "LEFTSHIFT"
 
 [output]
 keys = ["A", "S", "E", "T", "N", "I", "O", "P"]

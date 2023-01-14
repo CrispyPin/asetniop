@@ -1,25 +1,24 @@
-use evdev::*;
 use evdev::uinput::*;
+use evdev::*;
 use std::io::stdin;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 mod chordkb;
 use chordkb::*;
-mod keys;
 mod config;
+mod keys;
 
 const DEBUG_SUPPORTED_KEYS: bool = false;
 
 fn main() {
-	
 	let selected = choose_kb();
 	if selected.is_none() {
 		return;
 	}
 	let input_kb = selected.unwrap();
 	thread::sleep(Duration::from_millis(200));
-	
+
 	let keys = input_kb.supported_keys().unwrap();
 	if DEBUG_SUPPORTED_KEYS {
 		println!("{:?}", keys);
@@ -30,8 +29,8 @@ fn main() {
 }
 
 fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
-	 VirtualDeviceBuilder::new()
-	 	.unwrap()
+	VirtualDeviceBuilder::new()
+		.unwrap()
 		.name("asetniop")
 		.with_keys(keys)
 		.unwrap()
@@ -42,7 +41,7 @@ fn create_device(keys: &AttributeSetRef<Key>) -> VirtualDevice {
 fn choose_kb() -> Option<Device> {
 	let mut keyboards = find_keyboards();
 	println!("Found {} keyboard device(s)", keyboards.len());
-	
+
 	let stdin = stdin();
 	loop {
 		println!("Select one of the following:");
@@ -56,17 +55,15 @@ fn choose_kb() -> Option<Device> {
 		if let Ok(index) = answer.parse::<usize>() {
 			if index < keyboards.len() {
 				return Some(keyboards.remove(index));
-			}
-			else {
+			} else {
 				println!("Index outside of range");
 			}
-		}
-		else {
+		} else {
 			println!("Not a valid integer");
 		}
 		println!("\n");
 	}
-	
+
 	fn print_devices(devices: &[Device]) {
 		for (i, kb) in devices.iter().enumerate() {
 			if let Some(name) = kb.name() {
@@ -81,7 +78,7 @@ fn choose_kb() -> Option<Device> {
 fn find_keyboards() -> Vec<Device> {
 	let mut keyboards = Vec::new();
 	println!("Scanning /dev/input/ for keyboards");
-	for device in evdev::enumerate() {
+	for (_path, device) in evdev::enumerate() {
 		let keys = device.supported_keys();
 		if let Some(keys) = keys {
 			if keys.contains(Key::KEY_SPACE) {

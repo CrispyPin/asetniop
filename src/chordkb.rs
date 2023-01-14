@@ -1,10 +1,10 @@
 use std::process::exit;
 
-use evdev::*;
 use evdev::uinput::*;
+use evdev::*;
 
-use crate::keys::*;
 use crate::config::*;
+use crate::keys::*;
 
 const DEBUG_PASSTHROUGH: bool = false;
 const DEBUG_OUTPUT: bool = false;
@@ -18,7 +18,6 @@ pub struct ChordedKeyboard {
 	/// accumulated chord, resets when all keys are released, triggering a virtual press
 	chord: Chord,
 }
-
 
 impl ChordedKeyboard {
 	pub fn new(input_dev: Device, output_dev: VirtualDevice) -> Self {
@@ -41,13 +40,12 @@ impl ChordedKeyboard {
 					let key = Key(event.code());
 					if self.config.keys.contains_key(&key) {
 						self.update_chord(key, event.value());
-					}
-					else if self.config.remaps.contains_key(&key) {
+					} else if self.config.remaps.contains_key(&key) {
 						let mapped_key = self.config.remaps.get(&key).unwrap();
-						let mapped_event = InputEvent::new(EventType::KEY, mapped_key.code(), event.value());
+						let mapped_event =
+							InputEvent::new(EventType::KEY, mapped_key.code(), event.value());
 						self.output_dev.emit(&[mapped_event]).unwrap();
-					}
-					else {
+					} else {
 						self.output_dev.emit(&[event]).unwrap();
 						if DEBUG_PASSTHROUGH {
 							println!("passing through {} {:?}", event.value(), key);
@@ -63,8 +61,7 @@ impl ChordedKeyboard {
 		if state == 1 {
 			self.state |= chord_part;
 			self.chord |= chord_part;
-		}
-		else if state == 0 {
+		} else if state == 0 {
 			self.state &= !chord_part;
 		}
 
@@ -85,4 +82,3 @@ impl ChordedKeyboard {
 		}
 	}
 }
-

@@ -1,11 +1,10 @@
+use evdev::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use toml::Value;
-use evdev::*;
 
 use crate::keys::*;
-
 
 pub struct ChordConfig {
 	pub keys: HashMap<Key, Chord>,
@@ -30,12 +29,13 @@ impl ChordConfig {
 		let mut file_config = String::new();
 		if let Ok(mut file) = File::open("default.toml") {
 			file.read_to_string(&mut file_config).unwrap();
-		}
-		else {
+		} else {
 			println!("No config found");
 			return Self::new();
 		}
-		let file_config = file_config.parse::<Value>().expect("Could not parse config file; not valid TOML");
+		let file_config = file_config
+			.parse::<Value>()
+			.expect("Could not parse config file; not valid TOML");
 
 		// load input keys
 		let loaded_keys = &file_config["input"]["keys"];
@@ -63,22 +63,28 @@ impl ChordConfig {
 					let out_key = match name_to_key(out_key) {
 						Some(key) => key,
 						None => {
-							println!("Could not bind '{}' to '{}', output key is invalid", in_key, out_key);
+							println!(
+								"Could not bind '{}' to '{}', output key is invalid",
+								in_key, out_key
+							);
 							continue;
-						},
+						}
 					};
 					let in_key = match name_to_key(in_key) {
 						Some(key) => key,
 						None => {
-							println!("Could not bind '{}' to '{:?}', input key is invalid", in_key, out_key);
+							println!(
+								"Could not bind '{}' to '{:?}', input key is invalid",
+								in_key, out_key
+							);
 							continue;
-						},
+						}
 					};
 					remaps.insert(in_key, out_key);
 				}
 			}
 		}
-		
+
 		let mut chord_components: HashMap<Key, Chord> = HashMap::new();
 		// load output/emulated keys
 		let mapped_keys = &file_config["output"]["keys"];
@@ -90,16 +96,19 @@ impl ChordConfig {
 					let mapped_key = match name_to_key(mapped_key_name) {
 						Some(key) => key,
 						None => {
-							println!("Could not assign chord key '{}', it is invalid", mapped_key_name);
+							println!(
+								"Could not assign chord key '{}', it is invalid",
+								mapped_key_name
+							);
 							continue;
-						},
+						}
 					};
 					chords.insert(chord_part, KeyBind::single(mapped_key));
 					chord_components.insert(mapped_key, chord_part);
 				}
 			}
 		}
-		
+
 		let loaded_chords = &file_config["output"]["chords"];
 		if let Value::Table(loaded_chords) = loaded_chords {
 			for (chord_str, out_key) in loaded_chords.iter() {
@@ -107,9 +116,12 @@ impl ChordConfig {
 					let out_key = match name_to_key(out_key) {
 						Some(key) => key,
 						None => {
-							println!("Could not bind chord '{}' to '{}', output key is invalid", chord_str, out_key);
+							println!(
+								"Could not bind chord '{}' to '{}', output key is invalid",
+								chord_str, out_key
+							);
 							continue;
-						},
+						}
 					};
 
 					let mut chord = 0;
